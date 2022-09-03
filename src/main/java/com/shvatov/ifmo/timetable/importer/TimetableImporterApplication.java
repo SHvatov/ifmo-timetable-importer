@@ -15,6 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @SpringBootApplication
@@ -26,8 +28,6 @@ public class TimetableImporterApplication implements CommandLineRunner {
     private final TrelloApiClient trelloApiClient;
     private final TimetableProperties timetableProperties;
 
-    private record Pair<T, R>(T first, R second) {}
-
     public static void main(String[] args) {
         SpringApplication.run(TimetableImporterApplication.class, args).close();
     }
@@ -38,26 +38,27 @@ public class TimetableImporterApplication implements CommandLineRunner {
                 .doOnNext(it -> log.info("Получено следующее расписание: {}", it))
                 .flatMapIterable(IfmoTimetableResponse::getElements)
                 .filter(it -> !it.getLessons().isEmpty())
-                .flatMapIterable(it ->
-                        it.getLessons()
-                                .stream()
-                                .map(lesson -> new Pair<>(it.getDate(), lesson))
-                                .toList())
-                .flatMap(pair ->
+                .map(it ->
                         trelloApiClient.createCardWithTemplate(
                                         new CreateTrelloCardWithTemplateRequest()
-                                                .setName(timetableCardName(pair.first()))
-                                                .setDescription(timetableCardDescription(pair.second()))
-                                                .setDueDate(pair.first().atTime(LocalTime.of(22, 0, 0)))
+                                                .setName(timetableCardName(it.getDate()))
+                                                .setDescription(timetableCardDescription(it.getLessons()))
+                                                .setDueDate(it.getDate().atTime(LocalTime.of(22, 0, 0)))
                                                 .setTemplateCardId(timetableProperties.getTrelloCardTemplateId())
                                                 .setListId(timetableProperties.getTrelloCardDestinationListId()))
-                                .doOnNext(it -> log.info("Получен ответ от Trello: {}", it)))
+                                .doOnNext(rs -> log.info("Получен ответ от Trello: {}", rs)))
                 .blockLast();
     }
 
 
     private String timetableCardName(LocalDate date) {
         return "Занятия в университете [%s]".formatted(date);
+    }
+
+    private String timetableCardDescription(List<IfmoLesson> lessons) {
+        return lessons.stream()
+                .map(this::timetableCardDescription)
+                .collect(Collectors.joining("\n"));
     }
 
     private String timetableCardDescription(IfmoLesson lesson) {
@@ -69,7 +70,6 @@ public class TimetableImporterApplication implements CommandLineRunner {
                 **Окончание:**     %s
                 **Адрес:**         %s
                 **Аудитория:**     %s
-                \n
                 """
                 .formatted(
                         lesson.getType(), lesson.getTeacher(),
