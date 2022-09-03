@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class TrelloApiClient {
-    
+
     private static final String POST_CARDS_V1 = "/1/cards";
     private static final String CARD_NAME = "name";
     private static final String CARD_DESCRIPTION = "desc";
@@ -24,6 +24,7 @@ public class TrelloApiClient {
     private final WebClient trelloWebClient;
 
     public Mono<String> createCardWithTemplate(CreateTrelloCardWithTemplateRequest request) {
+        log.info("Creating a card in Trello...");
         return trelloWebClient.post()
                 .uri(
                         uriBuilder -> uriBuilder
@@ -38,6 +39,7 @@ public class TrelloApiClient {
                                 .build())
                 .retrieve()
                 .bodyToMono(String.class) // todo: properly map response?
-                .doOnError(error -> log.error("Возникло исключение при обращении к Trello API", error));
+                .doOnError(error -> log.error("Error while accessing Trello API", error))
+                .doOnNext(rs -> log.info("Received following response from Trello: {}", rs));
     }
 }

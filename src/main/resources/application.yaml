@@ -18,7 +18,7 @@ trello:
   timeout-ms: 50000
 
 timetable:
-  start-date: 2022-09-06
-  end-date: 2022-09-07
+  start-date: 2022-09-05
+  end-date: 2022-09-11
   trello-card-template-id: ${TRELLO_CARD_TEMPLATE_ID}
   trello-card-destination-list-id: ${TRELLO_CARD_DESTINATION_LIST_ID}

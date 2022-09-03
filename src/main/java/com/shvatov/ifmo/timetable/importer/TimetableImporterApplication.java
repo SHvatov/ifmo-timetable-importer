@@ -35,18 +35,16 @@ public class TimetableImporterApplication implements CommandLineRunner {
     @Override
     public void run(String... args) {
         ifmoTimetableApiClient.getTimetable(timetableProperties.getStartDate(), timetableProperties.getEndDate())
-                .doOnNext(it -> log.info("Получено следующее расписание: {}", it))
                 .flatMapIterable(IfmoTimetableResponse::getElements)
                 .filter(it -> !it.getLessons().isEmpty())
-                .map(it ->
+                .flatMap(it ->
                         trelloApiClient.createCardWithTemplate(
-                                        new CreateTrelloCardWithTemplateRequest()
-                                                .setName(timetableCardName(it.getDate()))
-                                                .setDescription(timetableCardDescription(it.getLessons()))
-                                                .setDueDate(it.getDate().atTime(LocalTime.of(22, 0, 0)))
-                                                .setTemplateCardId(timetableProperties.getTrelloCardTemplateId())
-                                                .setListId(timetableProperties.getTrelloCardDestinationListId()))
-                                .doOnNext(rs -> log.info("Получен ответ от Trello: {}", rs)))
+                                new CreateTrelloCardWithTemplateRequest()
+                                        .setName(timetableCardName(it.getDate()))
+                                        .setDescription(timetableCardDescription(it.getLessons()))
+                                        .setDueDate(it.getDate().atTime(LocalTime.of(22, 0, 0)))
+                                        .setTemplateCardId(timetableProperties.getTrelloCardTemplateId())
+                                        .setListId(timetableProperties.getTrelloCardDestinationListId())))
                 .blockLast();
     }
 

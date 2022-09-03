@@ -1,7 +1,6 @@
 package com.shvatov.ifmo.timetable.importer.service;
 
 import com.shvatov.ifmo.timetable.importer.config.IfmoWebClientConfig.IfmoWebClient;
-import com.shvatov.ifmo.timetable.importer.config.IfmoWebClientConfig.IfmoWebClientConfigProps;
 import com.shvatov.ifmo.timetable.importer.model.IfmoTimetableResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -24,13 +23,12 @@ public class IfmoTimetableApiClient {
     @IfmoWebClient
     private final WebClient ifmoWebClient;
 
-    private final IfmoWebClientConfigProps properties;
-
     public Mono<IfmoTimetableResponse> getTimetable(@NonNull LocalDate from, @NonNull LocalDate to) {
         if (from.isAfter(to)) {
             throw new IllegalArgumentException("\"from\" must be less or equal to \"to\"");
         }
 
+        log.info("Retrieving schedule from IFMO API...");
         return ifmoWebClient.get()
                 .uri(uriBuilder ->
                         uriBuilder
@@ -40,6 +38,7 @@ public class IfmoTimetableApiClient {
                                 .build())
                 .retrieve()
                 .bodyToMono(IfmoTimetableResponse.class)
-                .doOnError(error -> log.error("Возникло исключение при обращении к IFMO API", error));
+                .doOnError(error -> log.error("Error while accessing IFMO API", error))
+                .doOnNext(it -> log.info("Retrieved following schedule: {}", it));
     }
 }
