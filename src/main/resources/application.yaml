@@ -1,0 +1,24 @@
+server:
+  port: 3030
+
+logging:
+  level:
+    reactor.netty.http.client: DEBUG
+    com.shvatov: TRACE
+
+ifmo:
+  host: https://my.itmo.ru
+  access-token: ${IFMO_ACCESS_TOKEN}
+  timeout-ms: 50000
+
+trello:
+  host: https://api.trello.com
+  api-key: ${TRELLO_API_KEY}
+  api-token: ${TRELLO_API_TOKEN}
+  timeout-ms: 50000
+
+timetable:
+  start-date: 2022-09-06
+  end-date: 2022-09-07
+  trello-card-template-id: ${TRELLO_CARD_TEMPLATE_ID}
+  trello-card-destination-list-id: ${TRELLO_CARD_DESTINATION_LIST_ID}
